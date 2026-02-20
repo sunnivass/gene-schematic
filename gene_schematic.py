@@ -5,7 +5,7 @@
 #   gene_schematic.png and gene_schematic.svg
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle, Polygon
+from matplotlib.patches import FancyBboxPatch, Polygon
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -16,6 +16,7 @@ class Domain:
     end: float
     label: str
     color: str
+    edge_color: str = "black"
 
 
 @dataclass
@@ -25,6 +26,7 @@ class Variant:
     color: str = "#444444"
     direction: str = "down"   # "down" (above line, tip pointing down) or "up" (below line, tip pointing up)
     y_offset: float = 0.85    # label offset multiplier to avoid overlap
+    sublabel: str = ""        # optional second line (e.g. frequency)
 
 
 @dataclass
@@ -82,13 +84,15 @@ def build_figure(
 
         # Domains
         for d in track.domains:
-            rect = Rectangle(
+            rect = FancyBboxPatch(
                 (d.start, y - domain_h / 2), d.end - d.start, domain_h,
-                facecolor=d.color, edgecolor=d.color, zorder=3
+                boxstyle="round,pad=0,rounding_size=0.06",
+                facecolor=d.color, edgecolor=d.edge_color,
+                linewidth=2.0, zorder=3,
             )
             ax.add_patch(rect)
             ax.text((d.start + d.end) / 2, y - 0.52, d.label,
-                    fontsize=12, ha="center", va="top")
+                    fontsize=12, fontweight="semibold", ha="center", va="top")
 
         # Variants
         tri_w = max_len * tri_w_frac
@@ -101,7 +105,7 @@ def build_figure(
                      [v.pos, y + 0.02]],
                     closed=True, facecolor=v.color, edgecolor=v.color, zorder=4
                 )
-                label_y = y + (0.50 + v.y_offset)
+                label_y = y + tri_h + 0.08 + v.y_offset * 0.3
                 va = "bottom"
             else:
                 # triangle below line, tip pointing up onto line
@@ -111,12 +115,18 @@ def build_figure(
                      [v.pos, y - 0.02]],
                     closed=True, facecolor=v.color, edgecolor=v.color, zorder=4
                 )
-                label_y = y - (0.50 + v.y_offset)
+                label_y = y - tri_h - 0.08 - v.y_offset * 0.3
                 va = "top"
 
             ax.add_patch(tri)
-            ax.text(v.pos, label_y, v.label, fontsize=12, color=v.color,
-                    ha="center", va=va)
+
+            # Build combined label: main text + optional sublabel on next line
+            display_label = v.label
+            if v.sublabel:
+                display_label = f"{v.label}\n{v.sublabel}"
+
+            ax.text(v.pos, label_y, display_label, fontsize=12, color=v.color,
+                    ha="center", va=va, linespacing=1.4)
 
     if title:
         ax.set_title(title, fontsize=16, pad=12)

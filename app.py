@@ -29,72 +29,14 @@ st.markdown(
 # ── session-state defaults ──────────────────────────────────────────────────────
 DEFAULT_TRACKS = [
     {
-        "name": "EGL-9",
-        "length": 723,
-        "name_color": "#d7191c",
+        "name": "ABC1",
+        "length": 1000,
+        "name_color": "#000000",
         "line_color": "#000000",
         "domains": [
-            {"start": 20, "end": 80, "label": "Zinc-finger", "color": "#e78be7"},
-            {"start": 460, "end": 560, "label": "Fe2OG dioxygenase domain", "color": "#7b1fa2"},
+            {"start": 100, "end": 300, "label": "Domain", "color": "#888888", "edge_color": "#000000"},
         ],
-        "variants": [
-            {"pos": 540, "label": "et60 & et61 (R557H)", "color": "#333333",
-             "direction": "down", "y_offset": 1.00},
-            {"pos": 550, "label": "et62 (R557C)", "color": "#333333",
-             "direction": "down", "y_offset": 1.45},
-        ],
-    },
-    {
-        "name": "FAT-2",
-        "length": 376,
-        "name_color": "#1a9641",
-        "line_color": "#000000",
-        "domains": [
-            {"start": 70, "end": 320, "label": "Fatty acid desaturase domain", "color": "#1f4aff"},
-        ],
-        "variants": [
-            {"pos": 20,  "label": "et63\n(V25M)",    "color": "#333333",
-             "direction": "down", "y_offset": 0.75},
-            {"pos": 90,  "label": "et64-et66\n(S99L)", "color": "#333333",
-             "direction": "down", "y_offset": 0.75},
-            {"pos": 101, "label": "wa17\n(S101F)",   "color": "#d62728",
-             "direction": "down", "y_offset": 0.75},
-        ],
-    },
-    {
-        "name": "FTN-2",
-        "length": 170,
-        "name_color": "#d7191c",
-        "line_color": "#000000",
-        "domains": [
-            {"start": 5, "end": 165, "label": "Ferritin-like diiron domain", "color": "#ff1f1f"},
-        ],
-        "variants": [
-            {"pos": 89,  "label": "et67\n(W89*)",  "color": "#333333",
-             "direction": "down", "y_offset": 0.75},
-            {"pos": 137, "label": "et68\n(Q137*)", "color": "#333333",
-             "direction": "down", "y_offset": 0.75},
-        ],
-    },
-    {
-        "name": "HIF-1",
-        "length": 719,
-        "name_color": "#1a9641",
-        "line_color": "#000000",
-        "domains": [
-            {"start": 8,   "end": 50,  "label": "bHLH\ndomain", "color": "#64dbe0"},
-            {"start": 85,  "end": 150, "label": "PAS\ndomain",  "color": "#4f9e1f"},
-            {"start": 230, "end": 300, "label": "PAS\ndomain",  "color": "#38ff38"},
-            {"start": 305, "end": 350, "label": "PAC",          "color": "#58b9b3"},
-        ],
-        "variants": [
-            {"pos": 365, "label": "P400", "color": "#d62728",
-             "direction": "up", "y_offset": 0.75},
-            {"pos": 500, "label": "P621", "color": "#d62728",
-             "direction": "up", "y_offset": 0.75},
-            {"pos": 390, "label": "et69\n(1241-1G>A\nsplice acceptor variant)",
-             "color": "#333333", "direction": "down", "y_offset": 1.0},
-        ],
+        "variants": [],
     },
 ]
 
@@ -134,7 +76,7 @@ with st.sidebar:
         )
         st.rerun()
 
-    if st.button("🔄 Reset to example"):
+    if st.button("🔄 Reset to default"):
         st.session_state["tracks"] = json.loads(json.dumps(DEFAULT_TRACKS))
         st.rerun()
 
@@ -168,7 +110,8 @@ for ti, track in enumerate(tracks_data):
                 value=int(dom["end"]), key=f"t{ti}_d{di}_end"
             )
             dom["label"] = dc3.text_input("Label", value=dom["label"], key=f"t{ti}_d{di}_lbl")
-            dom["color"] = color_input("Colour", dom["color"], key=f"t{ti}_d{di}_col")
+            dom["color"] = color_input("Fill", dom["color"], key=f"t{ti}_d{di}_col")
+            dom["edge_color"] = color_input("Border", dom.get("edge_color", "#000000"), key=f"t{ti}_d{di}_ecol")
             if dc5.button("🗑", key=f"t{ti}_d{di}_del", help="Remove domain"):
                 to_delete_domain.append(di)
 
@@ -180,7 +123,7 @@ for ti, track in enumerate(tracks_data):
         if st.button("➕ Add domain", key=f"t{ti}_adddom"):
             track["domains"].append(
                 {"start": 0, "end": int(track["length"]) // 2,
-                 "label": "New domain", "color": "#888888"}
+                 "label": "New domain", "color": "#888888", "edge_color": "#000000"}
             )
             st.rerun()
 
@@ -188,12 +131,13 @@ for ti, track in enumerate(tracks_data):
         st.markdown("**Variants**")
         to_delete_variant: list[int] = []
         for vi, var in enumerate(track["variants"]):
-            vc1, vc2, vc3, vc4, vc5, vc6 = st.columns([2, 4, 2, 2, 2, 1])
+            vc1, vc2, vc3, vc4, vc5, vc6 = st.columns([2, 3, 2, 2, 2, 1])
             var["pos"] = vc1.number_input(
                 "Position", min_value=0, max_value=int(track["length"]),
                 value=int(var["pos"]), key=f"t{ti}_v{vi}_pos"
             )
             var["label"] = vc2.text_input("Label", value=var["label"], key=f"t{ti}_v{vi}_lbl")
+            var["sublabel"] = vc3.text_input("Sublabel", value=var.get("sublabel", ""), key=f"t{ti}_v{vi}_sub")
             var["color"] = color_input("Colour", var["color"], key=f"t{ti}_v{vi}_col")
             var["direction"] = vc4.selectbox(
                 "Direction", ["down", "up"],
@@ -215,7 +159,8 @@ for ti, track in enumerate(tracks_data):
         if st.button("➕ Add variant", key=f"t{ti}_addvar"):
             track["variants"].append(
                 {"pos": int(track["length"]) // 2, "label": "New variant",
-                 "color": "#444444", "direction": "down", "y_offset": 0.85}
+                 "color": "#444444", "direction": "down", "y_offset": 0.85,
+                 "sublabel": ""}
             )
             st.rerun()
 
@@ -256,7 +201,7 @@ if tracks_data:
         st.pyplot(fig)
 
         # ── download buttons ───────────────────────────────────────────────────
-        dl1, dl2 = st.columns(2)
+        dl1, dl2, dl3 = st.columns(3)
 
         png_buf = io.BytesIO()
         fig.savefig(png_buf, format="png", dpi=300, bbox_inches="tight")
@@ -272,6 +217,14 @@ if tracks_data:
         dl2.download_button(
             "⬇ Download SVG", data=svg_buf,
             file_name="gene_schematic.svg", mime="image/svg+xml"
+        )
+
+        pdf_buf = io.BytesIO()
+        fig.savefig(pdf_buf, format="pdf", bbox_inches="tight")
+        pdf_buf.seek(0)
+        dl3.download_button(
+            "⬇ Download PDF", data=pdf_buf,
+            file_name="gene_schematic.pdf", mime="application/pdf"
         )
 
         plt.close(fig)
